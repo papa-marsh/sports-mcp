@@ -1,11 +1,29 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { getMLBGames, getMLBPlayers, getMLBTeams } from './mlb';
+import { getMLBTeamIds, getMLBGames, getMLBPlayers, getMLBTeams } from './mlb';
 
 export interface Env {
 	BALLDONTLIE_API_KEY: string;
 }
 
 export const TOOLS: Tool[] = [
+	{
+		name: 'get_current_date_time',
+		description: 'Returns the current date and time as context for up-to-date lookups.',
+		inputSchema: {
+			type: 'object',
+			properties: {},
+			required: [],
+		},
+	},
+	{
+		name: 'get_mlb_team_ids',
+		description: 'Returns a map of IDs for all MLB teams.',
+		inputSchema: {
+			type: 'object',
+			properties: {},
+			required: [],
+		},
+	},
 	{
 		name: 'get_mlb_teams',
 		description: 'Get MLB teams. Optionally filter by division and/or league.',
@@ -147,6 +165,12 @@ export default {
           let resultJson
 
 					switch (name) {
+            case 'get_current_date_time':
+              resultJson = {"Current Date & Time": new Date().toISOString()}
+              break;
+            case 'get_mlb_team_ids':
+              resultJson = await getMLBTeamIds(args);
+              break;
 						case 'get_mlb_teams':
 							resultJson = await getMLBTeams(args);
               break;
