@@ -163,13 +163,12 @@ export default {
 				} else {
 					throw new Error(`Unknown method: ${method}`);
 				}
-        
+
 				const responseJson = JSON.stringify({
 					jsonrpc: '2.0',
 					id,
           result,
 				});
-				console.debug(responseJson);
 				return new Response(responseJson, {
 					status: 200,
 					headers: {
