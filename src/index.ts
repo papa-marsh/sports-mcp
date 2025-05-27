@@ -166,7 +166,7 @@ export default {
 
 					switch (name) {
             case 'get_current_date_time':
-              resultJson = {"Current Date & Time": new Date().toISOString()}
+              resultJson = {"Current Date & Time": new Date().toLocaleString('sv-SE', { timeZone: 'America/New_York' })}
               break;
             case 'get_mlb_team_ids':
               resultJson = await getMLBTeamIds(args);
