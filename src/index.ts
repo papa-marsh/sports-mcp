@@ -291,11 +291,6 @@ export const TOOLS: Tool[] = [
 					description:
 						'Returns only playoff games when set to true. Returns regular season games when set to false. Returns both when not specified',
 				},
-				weeks: {
-					type: 'array',
-					items: { type: 'number' },
-					description: 'Returns games that occurred in these weeks. This should be an array of numbers',
-				},
 			},
 			required: [],
 		},
