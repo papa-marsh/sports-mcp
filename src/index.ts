@@ -3,6 +3,7 @@ import { getMLBTeamIds, getMLBGames, getMLBPlayers, getMLBTeams } from './mlb';
 
 export interface Env {
 	BALLDONTLIE_API_KEY: string;
+	AUTH_TOKEN: string;
 }
 
 export const TOOLS: Tool[] = [
@@ -118,6 +119,48 @@ export default {
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 		};
 
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return new Response(
+				JSON.stringify({
+					jsonrpc: '2.0',
+					id: null,
+					error: {
+						code: -32001,
+						message: 'Authorization header required',
+					},
+				}),
+				{
+					status: 401,
+					headers: {
+						'content-type': 'application/json',
+						...corsHeaders,
+					},
+				}
+			);
+		}
+
+		const token = authHeader.slice(7); // Remove 'Bearer ' prefix
+		if (token !== env.AUTH_TOKEN) {
+			return new Response(
+				JSON.stringify({
+					jsonrpc: '2.0',
+					id: null,
+					error: {
+						code: -32001,
+						message: 'Invalid authentication token',
+					},
+				}),
+				{
+					status: 401,
+					headers: {
+						'content-type': 'application/json',
+						...corsHeaders,
+					},
+				}
+			);
+		}
+
 		// Handle preflight requests
 		if (request.method === 'OPTIONS') {
 			return new Response(null, { status: 204, headers: corsHeaders });
@@ -162,28 +205,28 @@ export default {
 				} else if (method === 'tools/call') {
 					const { name, arguments: args } = params;
 					args.apiKey = env.BALLDONTLIE_API_KEY;
-          let resultJson
+					let resultJson;
 
 					switch (name) {
-            case 'get_current_date_time':
-              resultJson = {"Current Date & Time": new Date().toLocaleString('sv-SE', { timeZone: 'America/New_York' })}
-              break;
-            case 'get_mlb_team_ids':
-              resultJson = await getMLBTeamIds(args);
-              break;
+						case 'get_current_date_time':
+							resultJson = { 'Current Date & Time': new Date().toLocaleString('sv-SE', { timeZone: 'America/New_York' }) };
+							break;
+						case 'get_mlb_team_ids':
+							resultJson = await getMLBTeamIds(args);
+							break;
 						case 'get_mlb_teams':
 							resultJson = await getMLBTeams(args);
-              break;
+							break;
 						case 'get_mlb_players':
 							resultJson = await getMLBPlayers(args);
-              break;
+							break;
 						case 'get_mlb_games':
 							resultJson = await getMLBGames(args);
-              break;
+							break;
 						default:
-              throw new Error(`Unknown tool: ${name}`);
-            }
-          result = { 'content': [{ 'type': 'text', 'text': JSON.stringify(resultJson) }] }
+							throw new Error(`Unknown tool: ${name}`);
+					}
+					result = { content: [{ type: 'text', text: JSON.stringify(resultJson) }] };
 				} else {
 					throw new Error(`Unknown method: ${method}`);
 				}
@@ -191,7 +234,7 @@ export default {
 				const responseJson = JSON.stringify({
 					jsonrpc: '2.0',
 					id,
-          result,
+					result,
 				});
 				return new Response(responseJson, {
 					status: 200,
