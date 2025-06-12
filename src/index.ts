@@ -20,6 +20,19 @@ export default {
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 		};
 
+		// Handle preflight requests
+		if (request.method === 'OPTIONS') {
+			return new Response(null, { status: 204, headers: corsHeaders });
+		}
+
+		// Handle health checks
+		if (url.pathname === '/health') {
+			return new Response('OK', {
+				status: 200,
+				headers: corsHeaders,
+			});
+		}
+
 		const authHeader = request.headers.get('Authorization');
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {
 			return new Response(
@@ -60,19 +73,6 @@ export default {
 					},
 				}
 			);
-		}
-
-		// Handle preflight requests
-		if (request.method === 'OPTIONS') {
-			return new Response(null, { status: 204, headers: corsHeaders });
-		}
-
-		// Handle health checks
-		if (url.pathname === '/health') {
-			return new Response('OK', {
-				status: 200,
-				headers: corsHeaders,
-			});
 		}
 
 		// Handle MCP requests
