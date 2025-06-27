@@ -11,9 +11,6 @@ export interface Env {
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url);
-		console.log(`Request received for ${url.pathname} (Method: ${request.method})`);
-
-		// CORS headers for browser compatibility
 		const corsHeaders = {
 			'Access-Control-Allow-Origin': '*',
 			'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -31,48 +28,6 @@ export default {
 				status: 200,
 				headers: corsHeaders,
 			});
-		}
-
-		const authHeader = request.headers.get('Authorization');
-		if (!authHeader || !authHeader.startsWith('Bearer ')) {
-			return new Response(
-				JSON.stringify({
-					jsonrpc: '2.0',
-					id: null,
-					error: {
-						code: -32001,
-						message: 'Authorization header required',
-					},
-				}),
-				{
-					status: 401,
-					headers: {
-						'content-type': 'application/json',
-						...corsHeaders,
-					},
-				}
-			);
-		}
-
-		const token = authHeader.slice(7); // Remove 'Bearer ' prefix
-		if (token !== env.AUTH_TOKEN) {
-			return new Response(
-				JSON.stringify({
-					jsonrpc: '2.0',
-					id: null,
-					error: {
-						code: -32001,
-						message: 'Invalid authentication token',
-					},
-				}),
-				{
-					status: 401,
-					headers: {
-						'content-type': 'application/json',
-						...corsHeaders,
-					},
-				}
-			);
 		}
 
 		// Handle MCP requests
@@ -106,6 +61,47 @@ export default {
 					console.log("Listing tools");
 					result = { tools: TOOLS };
 				} else if (method === 'tools/call') {
+					const authHeader = request.headers.get('Authorization');
+					if (!authHeader || !authHeader.startsWith('Bearer ')) {
+						return new Response(
+							JSON.stringify({
+								jsonrpc: '2.0',
+								id: null,
+								error: {
+									code: -32001,
+									message: 'Authorization header required',
+								},
+							}),
+							{
+								status: 401,
+								headers: {
+									'content-type': 'application/json',
+									...corsHeaders,
+								},
+							}
+						);
+					}
+
+					const token = authHeader.slice(7); // Remove 'Bearer ' prefix
+					if (token !== env.AUTH_TOKEN) {
+						return new Response(
+							JSON.stringify({
+								jsonrpc: '2.0',
+								id: null,
+								error: {
+									code: -32001,
+									message: 'Invalid authentication token',
+								},
+							}),
+							{
+								status: 401,
+								headers: {
+									'content-type': 'application/json',
+									...corsHeaders,
+								},
+							}
+						);
+					}
 					const { name, arguments: args } = params;
 					console.log(`Tool called: "${name}"`, args);
 					args.apiKey = env.BALLDONTLIE_API_KEY;
