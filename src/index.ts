@@ -22,16 +22,8 @@ export default {
 			return new Response(null, { status: 204, headers: corsHeaders });
 		}
 
-		// Handle health checks
-		if (url.pathname === '/health') {
-			return new Response('OK', {
-				status: 200,
-				headers: corsHeaders,
-			});
-		}
-
 		// Handle MCP requests
-		if (request.method === 'POST' && url.pathname === '/mcp') {
+		if (request.method === 'POST') {
 			try {
 				const message = (await request.json()) as any;
 				const { method, params, id } = message;
@@ -51,8 +43,6 @@ export default {
 						},
 					};
 				} else if (method === 'notifications/initialized') {
-					// Handle the initialized notification - this is sent after the initialize handshake
-					// For notifications, we don't return a result, just acknowledge receipt
 					return new Response('', {
 						status: 204, // No Content - notification acknowledged
 						headers: corsHeaders,
@@ -190,7 +180,7 @@ export default {
 		}
 
 		// Handle SSE endpoint for Server-Sent Events transport
-		if (request.method === 'GET' && url.pathname === '/mcp') {
+		if (request.method === 'GET') {
 			// Return SSE-compatible response
 			return new Response('', {
 				status: 200,
@@ -201,28 +191,6 @@ export default {
 					...corsHeaders,
 				},
 			});
-		}
-
-		// Root endpoint - return server info
-		if (url.pathname === '/') {
-			return new Response(
-				JSON.stringify({
-					name: 'sports-mcp',
-					version: '1.0.0',
-					capabilities: ['tools'],
-					endpoints: {
-						mcp: '/mcp',
-						health: '/health',
-					},
-				}),
-				{
-					status: 200,
-					headers: {
-						'content-type': 'application/json',
-						...corsHeaders,
-					},
-				}
-			);
 		}
 
 		return new Response('Sports MCP Server - Send POST requests to /mcp endpoint', {
