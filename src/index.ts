@@ -179,15 +179,12 @@ export default {
 			}
 		}
 
-		// Handle SSE endpoint for Server-Sent Events transport
+		// Handle GET requests  
 		if (request.method === 'GET') {
-			// Return SSE-compatible response
-			return new Response('', {
+			return new Response('Sports MCP Server - Send POST requests for MCP protocol', {
 				status: 200,
 				headers: {
-					'Content-Type': 'text/event-stream',
-					'Cache-Control': 'no-cache',
-					Connection: 'keep-alive',
+					'content-type': 'text/plain',
 					...corsHeaders,
 				},
 			});
