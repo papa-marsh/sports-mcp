@@ -11,15 +11,31 @@ export interface Env {
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url);
-		const corsHeaders = {
+		const globalHeaders = {
+			'content-type': 'application/json',
 			'Access-Control-Allow-Origin': '*',
 			'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 		};
 
-		// Handle preflight requests
-		if (request.method === 'OPTIONS') {
-			return new Response(null, { status: 204, headers: corsHeaders });
+		// Handle GET requests  
+		if (request.method === 'GET') {
+				console.log('Handling GET request');
+			if (request.headers.get('accept')?.includes('text/event-stream')) {
+				return new Response(JSON.stringify({
+					error: 'SSE not supported',
+					message: 'Server-Sent Events are not supported. Please use HTTP POST requests instead.',
+					supportedMethods: ['POST'],
+					endpoint: request.url
+				}), {
+					status: 501,
+					headers: globalHeaders,
+				})
+			}
+			return new Response('Sports MCP Server - Send POST requests for MCP protocol', {
+				status: 200,
+				headers: globalHeaders,
+			});
 		}
 
 		// Handle MCP requests
@@ -45,7 +61,7 @@ export default {
 				} else if (method === 'notifications/initialized') {
 					return new Response('', {
 						status: 204, // No Content - notification acknowledged
-						headers: corsHeaders,
+						headers: globalHeaders,
 					});
 				} else if (method === 'tools/list') {
 					console.log("Listing tools");
@@ -64,10 +80,7 @@ export default {
 							}),
 							{
 								status: 401,
-								headers: {
-									'content-type': 'application/json',
-									...corsHeaders,
-								},
+								headers: globalHeaders,
 							}
 						);
 					}
@@ -85,10 +98,7 @@ export default {
 							}),
 							{
 								status: 401,
-								headers: {
-									'content-type': 'application/json',
-									...corsHeaders,
-								},
+								headers: globalHeaders,
 							}
 						);
 					}
@@ -152,10 +162,7 @@ export default {
 				});
 				return new Response(responseJson, {
 					status: 200,
-					headers: {
-						'content-type': 'application/json',
-						...corsHeaders,
-					},
+					headers: globalHeaders,
 				});
 			} catch (error) {
 				console.error(error)
@@ -170,32 +177,15 @@ export default {
 					}),
 					{
 						status: 500,
-						headers: {
-							'content-type': 'application/json',
-							...corsHeaders,
-						},
+						headers: globalHeaders,
 					}
 				);
 			}
 		}
 
-		// Handle GET requests  
-		if (request.method === 'GET') {
-			return new Response('Sports MCP Server - Send POST requests for MCP protocol', {
-				status: 200,
-				headers: {
-					'content-type': 'text/plain',
-					...corsHeaders,
-				},
-			});
-		}
-
-		return new Response('Sports MCP Server - Send POST requests to /mcp endpoint', {
+		return new Response('Sports MCP Server', {
 			status: 200,
-			headers: {
-				'content-type': 'text/plain',
-				...corsHeaders,
-			},
+			headers: globalHeaders,
 		});
 	},
 };
